@@ -1,0 +1,21 @@
+{
+  "name": "safewalk-frontend",
+  "version": "1.0.0",
+  "description": "SafeWalk Frontend - Arduino Communication",
+  "main": "dist/index.js",
+  "scripts": {
+    "test:connection": "ts-node src/test/testConnection.ts",
+    "build": "tsc",
+    "dev": "ts-node src/test/testConnection.ts"
+  },
+  "dependencies": {
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "@types/react": "^18.2.0",
+    "typescript": "^5.0.0",
+    "ts-node": "^10.9.0"
+  }
+}
