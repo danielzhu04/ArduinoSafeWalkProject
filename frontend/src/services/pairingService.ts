@@ -107,7 +107,7 @@ export class PairingService {
     return [
       {
         deviceID: 'F4:12:FA:9F:A5:B0',  // Your actual Arduino MAC
-        ipAddress: '128.148.140.97',  // UPDATE THIS to your Arduino's real IP
+        ipAddress: '128.148.140.192',  // [UPDATE THIS] to your Arduino's real IP
         port: 8889,
         status: 'available',
         lastSeen: new Date(),

@@ -284,16 +284,39 @@ void initAlerts() {
  * Trigger alert when request comes in (LED + speaker)
  */
 void triggerRequestAlert() {
-  if (!ALERT_ENABLED) return;
+  if (!ALERT_ENABLED) {
+    Serial.println("DEBUG: ALERT_ENABLED is false!");
+    return;
+  }
   
   Serial.println("Triggering request alert");
   
   // Turn on LED
   digitalWrite(LED_PIN, HIGH);
+  Serial.print("DEBUG: LED pin ");
+  Serial.print(LED_PIN);
+  Serial.println(" set to HIGH");
+  
+  // Verify LED pin state
+  int ledState = digitalRead(LED_PIN);
+  Serial.print("DEBUG: LED pin readback = ");
+  Serial.println(ledState);
   
   // Play alert tone (continuous or repeating)
   const String alertTone = "alert:d=8,o=6,b=200:c,e,g,c7,e7,g7";
+  Serial.print("DEBUG: Parsing RTTTL string: ");
+  Serial.println(alertTone);
+  
   playToneSequenceISR(alertTone);
+  
+  Serial.print("DEBUG: Song length = ");
+  Serial.println(songLen);
+  
+  if (songLen <= 0) {
+    Serial.println("DEBUG: RTTTL parsing FAILED!");
+  } else {
+    Serial.println("DEBUG: RTTTL parsed successfully, speaker should play");
+  }
   
   Serial.println("LED ON | Speaker ACTIVE");
   // LED stays on until stopRequestAlert() is called

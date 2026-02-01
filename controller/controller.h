@@ -101,14 +101,6 @@ typedef enum {
   s_GAME_WIN = 7
 } fsm_state;
 
-typedef struct {
-  capSensDir inputQueue[4];
-  int inputCount;
-  long timeSinceLastDeployed[3];
-  stratEnum successfulStrat;
-  fsm_state state;
-} full_state;
-
 extern const int MAX_INPUT_COUNT = 4;
 #endif // ENABLE_GAME_MODE
 
@@ -164,5 +156,7 @@ void buildMsg(fsm_state state, stratEnum successfulStrat, joystickInput joystick
 //watchdog stuffs
 void initWatchdog();
 void petWatchdog();
+
+const int LED_PIN = 12;  // LED for visual feedback
 
 #endif

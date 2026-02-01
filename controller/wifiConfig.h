@@ -24,7 +24,6 @@ const int UDP_TARGET_PORT = 8888;  // Send to frontend
 const int UDP_LISTEN_PORT = 8889;  // Listen from frontend
 
 // Hardware Pins
-const int LED_PIN = 12;  // LED for visual feedback
 const int ALERT_ENABLED = true;  // Enable/disable alerts
 
 #endif

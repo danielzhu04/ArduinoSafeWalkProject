@@ -106,7 +106,29 @@ void setup() {
   // init interrupts
   initGPT();
 
+  // HARDWARE TEST: Verify LED and speaker work
   Serial.println("\n========================================");
+  Serial.println("HARDWARE TEST: Testing LED and Speaker");
+  Serial.println("========================================");
+  
+  // Test LED
+  Serial.println("Testing LED (Pin 12)...");
+  digitalWrite(LED_PIN, HIGH);
+  delay(1000);
+  digitalWrite(LED_PIN, LOW);
+  Serial.println("LED test complete (should have blinked for 1 sec)");
+  
+  // Test Speaker
+  Serial.println("Testing Speaker (Pin 13)...");
+  const String testTone = "test:d=4,o=5,b=200:c,e,g";
+  playToneSequenceISR(testTone);
+  delay(2000);  // Give time for the tone to play
+  stopPlay();
+  Serial.print("Speaker test complete (songLen = ");
+  Serial.print(songLen);
+  Serial.println(")");
+  
+  Serial.println("========================================");
   Serial.println("Setup complete");
   Serial.println("Status: WAITING FOR PAIRING");
   Serial.println("Device ready for frontend connection");
