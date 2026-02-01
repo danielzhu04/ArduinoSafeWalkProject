@@ -120,6 +120,7 @@ extern DeviceInfo deviceInfo;
  * Utilities for WiFi
  */
 extern WiFiUDP udp;
+extern volatile bool isAlertActive;  // Global alert state flag
 bool initWiFi();
 void sendStatusPacket(uint8_t status);
 void receiveRequestFromFrontend();
@@ -158,5 +159,6 @@ void initWatchdog();
 void petWatchdog();
 
 const int LED_PIN = 12;  // LED for visual feedback
+const int BUTTON_PIN = 10;  // Button for volunteer acknowledgment
 
 #endif

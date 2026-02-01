@@ -10,9 +10,13 @@
 #define MSG_PAIR_CONFIRM 0xCC
 #define MSG_REQUEST_ALERT 0xFF  // Frontend sends this to trigger alert
 #define MSG_NO_ALERT 0x00       // Frontend sends this for no alert
+#define MSG_ACKNOWLEDGED 0x01   // Arduino sends this when volunteer acknowledges
 
 WiFiUDP udp;
 DeviceInfo deviceInfo;
+
+// Global alert state to prevent retriggering
+volatile bool isAlertActive = false;
 
 
 // buildMsg() removed - not needed 
@@ -249,20 +253,18 @@ void receiveRequestFromFrontend() {
     
     // Handle request messages (when paired)
     if (deviceInfo.isPaired) {
-      static uint8_t lastRequest = 0x00;
       
-      if (receivedByte == MSG_REQUEST_ALERT && lastRequest != MSG_REQUEST_ALERT) {
+      // Only trigger alert if not already active (prevents retriggering)
+      if (receivedByte == MSG_REQUEST_ALERT && !isAlertActive) {
         Serial.println("\nSAFE WALK REQUEST RECEIVED");
         triggerRequestAlert();
-        lastRequest = MSG_REQUEST_ALERT;
         
         // Send ACK back
         sendStatusPacket(0xFF);  // Confirm we received the request
         
-      } else if (receivedByte == MSG_NO_ALERT && lastRequest != MSG_NO_ALERT) {
-        Serial.println("Request cleared");
+      } else if (receivedByte == MSG_NO_ALERT && isAlertActive) {
+        Serial.println("Request cleared from frontend");
         stopRequestAlert();
-        lastRequest = MSG_NO_ALERT;
         
         // Send ACK back
         sendStatusPacket(0x00);
@@ -284,41 +286,21 @@ void initAlerts() {
  * Trigger alert when request comes in (LED + speaker)
  */
 void triggerRequestAlert() {
-  if (!ALERT_ENABLED) {
-    Serial.println("DEBUG: ALERT_ENABLED is false!");
-    return;
-  }
+  if (!ALERT_ENABLED) return;
   
   Serial.println("Triggering request alert");
   
+  // Set alert state
+  isAlertActive = true;
+  
   // Turn on LED
   digitalWrite(LED_PIN, HIGH);
-  Serial.print("DEBUG: LED pin ");
-  Serial.print(LED_PIN);
-  Serial.println(" set to HIGH");
-  
-  // Verify LED pin state
-  int ledState = digitalRead(LED_PIN);
-  Serial.print("DEBUG: LED pin readback = ");
-  Serial.println(ledState);
   
   // Play alert tone (continuous or repeating)
   const String alertTone = "alert:d=8,o=6,b=200:c,e,g,c7,e7,g7";
-  Serial.print("DEBUG: Parsing RTTTL string: ");
-  Serial.println(alertTone);
-  
   playToneSequenceISR(alertTone);
   
-  Serial.print("DEBUG: Song length = ");
-  Serial.println(songLen);
-  
-  if (songLen <= 0) {
-    Serial.println("DEBUG: RTTTL parsing FAILED!");
-  } else {
-    Serial.println("DEBUG: RTTTL parsed successfully, speaker should play");
-  }
-  
-  Serial.println("LED ON | Speaker ACTIVE");
+  Serial.println("LED ON | Speaker ACTIVE | Alert State: ACTIVE");
   // LED stays on until stopRequestAlert() is called
 }
 
@@ -330,13 +312,16 @@ void stopRequestAlert() {
   
   Serial.println("Stopping alert");
   
+  // Clear alert state
+  isAlertActive = false;
+  
   // Turn off LED
   digitalWrite(LED_PIN, LOW);
   
   // Stop any playing sound
   stopPlay();
   
-  Serial.println("LED OFF | Speaker OFF");
+  Serial.println("LED OFF | Speaker OFF | Alert State: INACTIVE");
 }
 
 /*

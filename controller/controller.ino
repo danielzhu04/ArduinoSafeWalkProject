@@ -67,6 +67,8 @@ void setup() {
   pinMode(PIEZO_PIN, OUTPUT);
   R_PFS->PORT[PIEZO_PORT].PIN[PIEZO_PIN_NUM].PmnPFS_b.PDR = 1;
 
+  pinMode(BUTTON_PIN, INPUT_PULLUP);  // Acknowledgment button with internal pull-up
+
   pinMode(S6, OUTPUT);
   pinMode(S7, INPUT);
   pinMode(S8, INPUT);
@@ -106,29 +108,7 @@ void setup() {
   // init interrupts
   initGPT();
 
-  // HARDWARE TEST: Verify LED and speaker work
   Serial.println("\n========================================");
-  Serial.println("HARDWARE TEST: Testing LED and Speaker");
-  Serial.println("========================================");
-  
-  // Test LED
-  Serial.println("Testing LED (Pin 12)...");
-  digitalWrite(LED_PIN, HIGH);
-  delay(1000);
-  digitalWrite(LED_PIN, LOW);
-  Serial.println("LED test complete (should have blinked for 1 sec)");
-  
-  // Test Speaker
-  Serial.println("Testing Speaker (Pin 13)...");
-  const String testTone = "test:d=4,o=5,b=200:c,e,g";
-  playToneSequenceISR(testTone);
-  delay(2000);  // Give time for the tone to play
-  stopPlay();
-  Serial.print("Speaker test complete (songLen = ");
-  Serial.print(songLen);
-  Serial.println(")");
-  
-  Serial.println("========================================");
   Serial.println("Setup complete");
   Serial.println("Status: WAITING FOR PAIRING");
   Serial.println("Device ready for frontend connection");
@@ -202,26 +182,34 @@ void loop() {
   } else {
     // When paired, listen for requests from frontend
     receiveRequestFromFrontend();
-  }
-  
-  // Optional: Use joystick button to manually clear alert
-  // Uncomment if you want volunteers to press button to acknowledge request
-  /*
-  int pValue = analogRead(P);
-  static bool prevButton = false;
-  int newPVal = map(pValue, 0, 1023, 0, 100);
-  
-  if (newPVal <= 40 && newPVal >= 30) {
-    if (!prevButton) {
-      // Button pressed - could clear alert or send status
-      Serial.println("Button pressed by volunteer");
-      // sendStatusPacket(0x00);  // Volunteer acknowledging request
+    
+    // Check for button press (volunteer acknowledging request)
+    static bool lastButtonState = HIGH;
+    int buttonState = digitalRead(BUTTON_PIN);
+    
+    // Button pressed (LOW because of pull-up resistor)
+    if (buttonState == LOW && lastButtonState == HIGH && isAlertActive) {
+      Serial.println("Button pressed - volunteer acknowledging request");
+      
+      // Use the proper stop function to clear alert state
+      stopRequestAlert();
+      
+      // Play acceptance sound
+      const String acceptTone = "accept:d=4,o=5,b=240:e,g,c6,e6";
+      playToneSequenceISR(acceptTone);
+      
+      // Send acknowledgment to frontend (0x01 = acknowledged)
+      uint8_t ackMsg = 0x01;
+      udp.beginPacket(UDP_TARGET_IP, UDP_TARGET_PORT);
+      udp.write(&ackMsg, 1);
+      udp.endPacket();
+      
+      Serial.println("Acknowledgment sent to frontend | Alert cleared");
+      
+      delay(50);  // Debounce delay
     }
-    prevButton = true;
-  } else {
-    prevButton = false;
+    lastButtonState = buttonState;
   }
-  */
 
   // Watchdog timer - pet regularly to prevent reset
   static unsigned long lastPet = 0;

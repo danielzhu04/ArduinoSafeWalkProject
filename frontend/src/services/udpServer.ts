@@ -66,6 +66,8 @@ export class ArduinoUDPServer {
         this.handleStatusResponse(MessageTypes.REQUEST_ALERT, rinfo);
       } else if (messageByte === MessageTypes.NO_ALERT) {
         this.handleStatusResponse(MessageTypes.NO_ALERT, rinfo);
+      } else if (messageByte === MessageTypes.ACKNOWLEDGED) {
+        this.handleAcknowledgment(rinfo);
       } else {
         console.log('Unknown message type: 0x' + messageByte.toString(16));
       }
@@ -121,6 +123,30 @@ export class ArduinoUDPServer {
     if (this.statusCallback) {
       this.statusCallback({
         isAlertActive: isAlert,
+        lastResponseTime: new Date(),
+      });
+    }
+  }
+
+  /**
+   * Handle acknowledgment from Arduino (volunteer pressed button)
+   */
+  private handleAcknowledgment(rinfo: dgram.RemoteInfo): void {
+    console.log('\n=== VOLUNTEER ACKNOWLEDGED REQUEST ===');
+    console.log(`   From: ${rinfo.address}:${rinfo.port}`);
+    console.log(`   Time: ${new Date().toLocaleTimeString()}`);
+    console.log('   Volunteer has pressed the button');
+    console.log('=====================================\n');
+
+    // Update last seen
+    if (this.pairedDevice && this.pairedDevice.ipAddress === rinfo.address) {
+      this.pairedDevice.lastSeen = new Date();
+    }
+
+    // Update status to cleared
+    if (this.statusCallback) {
+      this.statusCallback({
+        isAlertActive: false,
         lastResponseTime: new Date(),
       });
     }

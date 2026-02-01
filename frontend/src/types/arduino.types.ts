@@ -29,6 +29,7 @@ export const MessageTypes = {
   PAIR_CONFIRM: 0xCC,
   REQUEST_ALERT: 0xFF,  // All 1s - trigger alert on Arduino
   NO_ALERT: 0x00,       // All 0s - clear alert
+  ACKNOWLEDGED: 0x01,   // Volunteer pressed button to acknowledge
 } as const;
 
 export interface ArduinoStatus {
